@@ -1,0 +1,14 @@
+{
+  "packages": [
+    "Microsoft.Powershell",
+    "Microsoft.VCRedist.2015+.x64",
+    "Git.Git",
+    "Amazon.AWSCLI",
+    "GitHub.cli",
+    "DenoLand.Deno",
+    "OpenJS.NodeJS",
+    "AgileBits.1Password.CLI",
+    "Perforce.P4V",
+    "tailscale.tailscale"
+  ]
+}
