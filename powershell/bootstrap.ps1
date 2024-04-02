@@ -40,20 +40,14 @@ function LoadEnvVariables {
 function LoadPackageList {
     $packageFile = Join-Path -Path $PSScriptRoot -ChildPath "winget-packages.json"
     if (Test-Path $packageFile) {
-        $global:packages = (Get-Content $packageFile | ConvertFrom-Json).packages
+        $packages = (Get-Content $packageFile | ConvertFrom-Json).packages
         Log "Loaded package list from configuration file"
+		return $packages
     }
     else {
         Log "Package configuration file not found. Exiting..." -type "Error"
         exit
     }
-}
-
-function New-TemporaryFile {
-    $tempPath = [System.IO.Path]::GetTempPath()
-    $tempFile = [System.IO.Path]::Combine($tempPath, [System.IO.Path]::GetRandomFileName())
-    $null = New-Item -Path $tempFile -ItemType File -Force
-    return $tempFile
 }
 
 function CheckAdmin {
@@ -83,33 +77,52 @@ function InstallWinget {
     try {
         Log "Downloading winget dependencies..."
 
+        $tempDir = [System.IO.Path]::GetTempPath()
+        $tempDir = Join-Path $tempDir ([System.IO.Path]::GetRandomFileName())
+        New-Item -ItemType Directory -Path $tempDir | Out-Null
+
         # Download VCLibs
-        $VCLibs_Path = New-TemporaryFile
+        $VCLibs_Path = Join-Path $tempDir "Microsoft.VCLibs.x64.14.00.Desktop.appx"
         $VCLibs_Url = "https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx"
-        Log "Downloading VCLibs from $VCLibs_Url to $VCLibs_Path`n`n"
-        Invoke-WebRequest -Uri $VCLibs_Url -OutFile $VCLibs_Path
+        Log "Downloading VCLibs from $VCLibs_Url to $VCLibs_Path"
+        try {
+            Invoke-WebRequest -Uri $VCLibs_Url -OutFile $VCLibs_Path
+        }
+        catch {
+            Log "Failed to download VCLibs. Error: $_" -type "Error"
+            throw
+        }
 
         # Download UI.Xaml
-        $UIXaml_Path = New-TemporaryFile
+        $UIXaml_Path = Join-Path $tempDir "Microsoft.UI.Xaml.2.8.x64.appx"
         $UIXaml_Url = "https://github.com/microsoft/microsoft-ui-xaml/releases/download/v2.8.6/Microsoft.UI.Xaml.2.8.x64.appx"
-        Log "Downloading UI.Xaml from $UIXaml_Url to $UIXaml_Path`n"
-        Invoke-WebRequest -Uri $UIXaml_Url -OutFile $UIXaml_Path
+        Log "Downloading UI.Xaml from $UIXaml_Url to $UIXaml_Path"
+        try {
+            Invoke-WebRequest -Uri $UIXaml_Url -OutFile $UIXaml_Path
+        }
+        catch {
+            Log "Failed to download UI.Xaml. Error: $_" -type "Error"
+            throw
+        }
 
         # Download winget license
-        $winget_license_path = New-TemporaryFile
+        $winget_license_path = Join-Path $tempDir "License1.xml"
         $winget_license_url = Get-WingetDownloadUrl -Match "License1.xml"
-        Log "Downloading winget license from $winget_license_url to $winget_license_path`n`n"
-        Invoke-WebRequest -Uri $winget_license_url -OutFile $winget_license_path
+        Log "Downloading winget license from $winget_license_url to $winget_license_path"
+        try {
+            Invoke-WebRequest -Uri $winget_license_url -OutFile $winget_license_path
+        }
+        catch {
+            Log "Failed to download winget license. Error: $_" -type "Error"
+            throw
+        }
 
         # Install everything
         Log "Installing winget and its dependencies..."
         Add-AppxProvisionedPackage -Online -PackagePath $winget_path -DependencyPackagePath $UIXaml_Path, $VCLibs_Path -LicensePath $winget_license_path | Out-Null
 
-        # Remove temp files
-        Remove-Item $VCLibs_Path
-        Remove-Item $UIXaml_Path
-        Remove-Item $winget_path
-        Remove-Item $winget_license_path
+        # Remove temp directory
+        Remove-Item $tempDir -Recurse -Force
     }
     catch {
         Log "Failed to install winget. Error: $_" -type "Error"
@@ -118,6 +131,7 @@ function InstallWinget {
 
 function InstallDeps {
     Log "Installing dependencies..."
+ 	$packages = LoadPackageList
     foreach ($package in $packages) {
         try {
             winget install -e --id $package -h
@@ -131,13 +145,32 @@ function InstallDeps {
 }
 
 function InstallVisualStudio {
-    $vsconfigFile = Join-Path -Path $PSScriptRoot -ChildPath ".vsconfig"
-    winget install --source winget --exact --id Microsoft.VisualStudio.2022.Professional --override "--passive --config $vsconfigFile"
+    try {
+        Log "Installing Visual Studio..."
+        $vsconfigFile = Join-Path -Path $PSScriptRoot -ChildPath ".vsconfig"
+        winget install --source winget --exact --id Microsoft.VisualStudio.2022.Community --override "--passive --config $vsconfigFile"
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to install Visual Studio."
+        }
+        Log "Visual Studio installation complete"
+    }
+    catch {
+        Log "Failed to install Visual Studio. Error: $_" -type "Error"
+    }
 }
 
 function InstallVisualStudioCode {
-    Log "Installing VS Code..."
-    winget install Microsoft.VisualStudioCode --override '/SILENT /mergetasks="!runcode,addcontextmenufiles,addcontextmenufolders"'
+    try {    
+        Log "Installing VS Code..."
+        winget install Microsoft.VisualStudioCode --override '/SILENT /mergetasks="!runcode,addcontextmenufiles,addcontextmenufolders"'
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to install Visual Studio Code."
+        }
+        Log "Visual Studio Code installation complete"
+    }
+    catch {
+        Log "Failed to install Visual Studio Code. Error: $_" -type "Error" 
+    }
 }
 
 function InstallBuildkiteAgent {
@@ -163,9 +196,11 @@ function ExitWithDelay {
         [int]$DelayInSeconds = 5,
         [int]$ExitCode = 0
     )
+
     Start-Sleep -Seconds $DelayInSeconds
     exit $ExitCode
 }
+
 function ParseArguments {
     param (
         [Parameter(Mandatory = $false, Position = 0)]
@@ -239,7 +274,6 @@ if (-not (CheckAdmin)) {
 # ============================================================================ #
 try {
     LoadEnvVariables
-    LoadPackageList
     ParseArguments $args
     Bootstrap
 }
