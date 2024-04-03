@@ -1,128 +1,125 @@
 {
-	"$schema" : "https://aka.ms/winget-packages.schema.2.0.json",
-	"CreationDate" : "2024-04-01T22:46:48.815-00:00",
-	"Sources" : 
-	[
-		{
-			"Packages" : 
-			[
-				{
-					"PackageIdentifier" : "AgileBits.1Password.CLI",
-					"Version" : "2.26.1"
-				},
-				{
-					"PackageIdentifier" : "DenoLand.Deno",
-					"Version" : "1.42.0"
-				},
-				{
-					"PackageIdentifier" : "Git.Git",
-					"Version" : "2.44.0"
-				},
-				{
-					"PackageIdentifier" : "Google.Chrome",
-					"Version" : "123.0.6312.59"
-				},
-				{
-					"PackageIdentifier" : "Microsoft.Edge",
-					"Version" : "123.0.2420.65"
-				},
-				{
-					"PackageIdentifier" : "Microsoft.EdgeWebView2Runtime",
-					"Version" : "123.0.2420.65"
-				},
-				{
-					"PackageIdentifier" : "Microsoft.AppInstaller",
-					"Version" : "1.22.10661.0"
-				},
-				{
-					"PackageIdentifier" : "Microsoft.UI.Xaml.2.7",
-					"Version" : "7.2208.15002.0"
-				},
-				{
-					"PackageIdentifier" : "Microsoft.UI.Xaml.2.8",
-					"Version" : "8.2310.30001.0"
-				},
-				{
-					"PackageIdentifier" : "Microsoft.VCLibs.Desktop.14",
-					"Version" : "14.0.33321.0"
-				},
-				{
-					"PackageIdentifier" : "Microsoft.WindowsTerminal",
-					"Version" : "1.19.10573.0"
-				},
-				{
-					"PackageIdentifier" : "RARLab.WinRAR",
-					"Version" : "7.00.0"
-				},
-				{
-					"PackageIdentifier" : "Microsoft.VisualStudio.2022.Professional",
-					"Version" : "17.9.5"
-				},
-				{
-					"PackageIdentifier" : "OpenJS.NodeJS",
-					"Version" : "21.7.1"
-				},
-				{
-					"PackageIdentifier" : "tailscale.tailscale",
-					"Version" : "1.62.0"
-				},
-				{
-					"PackageIdentifier" : "Python.Launcher",
-					"Version" : "< 3.12.0"
-				},
-				{
-					"PackageIdentifier" : "7zip.7zip",
-					"Version" : "23.01.00.0"
-				},
-				{
-					"PackageIdentifier" : "GitHub.cli",
-					"Version" : "2.46.0"
-				},
-				{
-					"PackageIdentifier" : "Microsoft.WindowsSDK.10.0.19041",
-					"Version" : "10.1.19041.685"
-				},
-				{
-					"PackageIdentifier" : "Microsoft.VCRedist.2015+.x64",
-					"Version" : "14.38.33135.0"
-				},
-				{
-					"PackageIdentifier" : "Microsoft.VCRedist.2015+.x64",
-					"Version" : "14.40.33617.1"
-				},
-				{
-					"PackageIdentifier" : "Microsoft.CLRTypesSQLServer.2019",
-					"Version" : "15.0.2000.5"
-				},
-				{
-					"PackageIdentifier" : "Amazon.AWSCLI",
-					"Version" : "2.15.33.0"
-				},
-				{
-					"PackageIdentifier" : "Microsoft.VisualStudioCode",
-					"Version" : "1.87.2"
-				},
-				{
-					"PackageIdentifier" : "Perforce.P4V",
-					"Version" : "234.255.8838"
-				},
-				{
-					"PackageIdentifier" : "Microsoft.WindowsSDK.10.0.22000",
-					"Version" : "10.0.22000.832"
-				},
-				{
-					"PackageIdentifier" : "Python.Python.3.9",
-					"Version" : "3.9.13"
-				}
-			],
-			"SourceDetails" : 
-			{
-				"Argument" : "https://cdn.winget.microsoft.com/cache",
-				"Identifier" : "Microsoft.Winget.Source_8wekyb3d8bbwe",
-				"Name" : "winget",
-				"Type" : "Microsoft.PreIndexed.Package"
-			}
-		}
-	],
-	"WinGetVersion" : "1.7.10661"
+  "$schema": "https://aka.ms/winget-packages.schema.2.0.json",
+  "CreationDate": "2024-04-01T22:46:48.815-00:00",
+  "Sources": [
+    {
+      "Packages": [
+        {
+          "PackageIdentifier": "AgileBits.1Password.CLI",
+          "Version": "2.26.1"
+        },
+        {
+          "PackageIdentifier": "DenoLand.Deno",
+          "Version": "1.42.0"
+        },
+        {
+          "PackageIdentifier": "Git.Git",
+          "Version": "2.44.0"
+        },
+        {
+          "PackageIdentifier": "Google.Chrome",
+          "Version": "123.0.6312.59"
+        },
+        {
+          "PackageIdentifier": "Microsoft.Edge",
+          "Version": "123.0.2420.65"
+        },
+        {
+          "PackageIdentifier": "Microsoft.EdgeWebView2Runtime",
+          "Version": "123.0.2420.65"
+        },
+        {
+          "PackageIdentifier": "Microsoft.AppInstaller",
+          "Version": "1.22.10661.0"
+        },
+        {
+          "PackageIdentifier": "Microsoft.UI.Xaml.2.7",
+          "Version": "7.2208.15002.0"
+        },
+        {
+          "PackageIdentifier": "Microsoft.UI.Xaml.2.8",
+          "Version": "8.2310.30001.0"
+        },
+        {
+          "PackageIdentifier": "Microsoft.VCLibs.Desktop.14",
+          "Version": "14.0.33321.0"
+        },
+        {
+          "PackageIdentifier": "Microsoft.WindowsTerminal",
+          "Version": "1.19.10573.0"
+        },
+        {
+          "PackageIdentifier": "RARLab.WinRAR",
+          "Version": "7.00.0"
+        },
+        {
+          "PackageIdentifier": "Microsoft.VisualStudio.2022.Professional",
+          "Version": "17.9.5"
+        },
+        {
+          "PackageIdentifier": "OpenJS.NodeJS",
+          "Version": "21.7.1"
+        },
+        {
+          "PackageIdentifier": "tailscale.tailscale",
+          "Version": "1.62.0"
+        },
+        {
+          "PackageIdentifier": "Python.Launcher",
+          "Version": "< 3.12.0"
+        },
+        {
+          "PackageIdentifier": "7zip.7zip",
+          "Version": "23.01.00.0"
+        },
+        {
+          "PackageIdentifier": "GitHub.cli",
+          "Version": "2.46.0"
+        },
+        {
+          "PackageIdentifier": "Microsoft.WindowsSDK.10.0.19041",
+          "Version": "10.1.19041.685"
+        },
+        {
+          "PackageIdentifier": "Microsoft.VCRedist.2015+.x64",
+          "Version": "14.38.33135.0"
+        },
+        {
+          "PackageIdentifier": "Microsoft.VCRedist.2015+.x64",
+          "Version": "14.40.33617.1"
+        },
+        {
+          "PackageIdentifier": "Microsoft.CLRTypesSQLServer.2019",
+          "Version": "15.0.2000.5"
+        },
+        {
+          "PackageIdentifier": "Amazon.AWSCLI",
+          "Version": "2.15.33.0"
+        },
+        {
+          "PackageIdentifier": "Microsoft.VisualStudioCode",
+          "Version": "1.87.2"
+        },
+        {
+          "PackageIdentifier": "Perforce.P4V",
+          "Version": "234.255.8838"
+        },
+        {
+          "PackageIdentifier": "Microsoft.WindowsSDK.10.0.22000",
+          "Version": "10.0.22000.832"
+        },
+        {
+          "PackageIdentifier": "Python.Python.3.9",
+          "Version": "3.9.13"
+        }
+      ],
+      "SourceDetails": {
+        "Argument": "https://cdn.winget.microsoft.com/cache",
+        "Identifier": "Microsoft.Winget.Source_8wekyb3d8bbwe",
+        "Name": "winget",
+        "Type": "Microsoft.PreIndexed.Package"
+      }
+    }
+  ],
+  "WinGetVersion": "1.7.10661"
 }
