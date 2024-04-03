@@ -1,7 +1,70 @@
-<# 
+<#
+.SYNOPSIS
+    runboot bootstrap script to set up a new Windows development environment optimized for Unreal Engine development.
 
+.DESCRIPTION
+    This script automates the setup of a new Windows development environment by installing various dependencies and tools using winget.
+    It supports installing winget itself if not already present, as well as Visual Studio, VS Code, Buildkite agent, 7-Zip, and a configurable list of dependencies from a JSON file.
+
+.PARAMETER Winget
+    Install winget package manager.
+
+.PARAMETER Deps
+    Install dependencies listed in the winget-packages.json file.
+
+.PARAMETER Vs
+    Install Visual Studio 2022 (using a .vsconfig file in the same directory) and Visual Studio Code.
+
+.PARAMETER Buildkite
+    Install Buildkite agent.
+
+.PARAMETER SevenZip
+    Install 7-Zip.
+
+.PARAMETER All
+    Install all components (default if no options specified).
+
+.PARAMETER Help
+    Displays help information about the script.
+
+.EXAMPLE
+    .\bootstrap.ps1 -All
+
+.EXAMPLE
+    .\bootstrap.ps1 -Help
+
+.NOTES
+    Version: 1.0.0
+    - Requires running with administrator privileges.
+    - Looks for a .env file in the same directory to load environment variables.
+    - Looks for a winget-packages.json file in the same directory to load the list of dependencies to install.
+    - Logs activity to bootstrap.log in the same directory.
+.LINK
+    Repository: https://github.com/runreal/runboot
 #>
+[CmdletBinding()]
+param (
+    [switch]$Winget,
+    [switch]$Deps,
+    [switch]$Vs,
+    [switch]$Buildkite,
+    [switch]$SevenZip,
+    [switch]$All,
+    [switch]$Version,
+    [switch]$Help
+)
 
+# ============================================================================ #
+# Metadata
+# ============================================================================ #
+$CurrentVersion = "1.0.0"
+
+
+# ============================================================================ #
+# Functions
+# ============================================================================ #
+
+# Logs a message to the console and a log file with timestamp and type (Info, Warning, Error).
 function Log($message, $type = "Info") {
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     $logMessage = "[$timestamp] [$type] $message"
@@ -19,6 +82,7 @@ function Log($message, $type = "Info") {
     }
 }
 
+# Loads environment variables from a .env file, if present.
 function LoadEnvVariables {
     $envFile = Join-Path -Path $PSScriptRoot -ChildPath ".env"
     if (Test-Path $envFile) {
@@ -37,6 +101,7 @@ function LoadEnvVariables {
     }
 }
 
+# Loads the list of packages to install with winget from a JSON configuration file.
 function LoadPackageList {
     $packageFile = Join-Path -Path $PSScriptRoot -ChildPath "winget-packages.json"
     if (Test-Path $packageFile) {
@@ -50,6 +115,7 @@ function LoadPackageList {
     }
 }
 
+# Checks if the script is running with administrator privileges.
 function CheckAdmin {
     if (([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
         return $true
@@ -57,6 +123,7 @@ function CheckAdmin {
     return $false
 }
 
+# Checks if winget is installed and returns the version if available.
 function CheckWinget {
     Log "Checking winget version..."
     try {
@@ -73,6 +140,36 @@ function CheckWinget {
     }
 }
 
+# Adapted from https://github.com/asheroto/winget-install/
+# Retrieves the download URL of the latest release asset that matches a specified pattern from the GitHub repository.
+function Get-WingetDownloadUrl {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$Match
+    )
+
+    $uri = "https://api.github.com/repos/microsoft/winget-cli/releases"
+    $releases = Invoke-RestMethod -uri $uri -Method Get -ErrorAction stop
+
+    Write-Debug "Getting latest release..."
+    foreach ($release in $releases) {
+        if ($release.name -match "preview") {
+            continue
+        }
+        $data = $release.assets | Where-Object name -Match $Match
+        if ($data) {
+            return $data.browser_download_url
+        }
+    }
+
+    Write-Debug "Falling back to the latest release..."
+    $latestRelease = $releases | Select-Object -First 1
+    $data = $latestRelease.assets | Where-Object name -Match $Match
+    return $data.browser_download_url
+}
+
+ # Downloads and installs winget and its dependencies.
 function InstallWinget {
     try {
         Log "Downloading winget dependencies..."
@@ -117,6 +214,18 @@ function InstallWinget {
             throw
         }
 
+        # Download winget
+        $winget_path = Join-Path $tempDir "Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle"
+        $winget_url = "https://aka.ms/getwinget"
+        Log "Downloading winget from $winget_url to $winget_path"
+        try {
+            Invoke-WebRequest -Uri $winget_url -OutFile $winget_path
+        }
+        catch {
+            Log "Failed to download winget. Error: $_" -type "Error"
+            throw
+        }
+
         # Install everything
         Log "Installing winget and its dependencies..."
         Add-AppxProvisionedPackage -Online -PackagePath $winget_path -DependencyPackagePath $UIXaml_Path, $VCLibs_Path -LicensePath $winget_license_path | Out-Null
@@ -129,6 +238,7 @@ function InstallWinget {
     }
 }
 
+# Installs the dependencies listed in the winget-packages.json file.
 function InstallDeps {
     Log "Installing dependencies..."
  	$packages = LoadPackageList
@@ -144,6 +254,7 @@ function InstallDeps {
     Log "Dependencies installation attempt complete"
 }
 
+ # Installs Visual Studio using a .vsconfig file for the installation configuration.
 function InstallVisualStudio {
     try {
         Log "Installing Visual Studio..."
@@ -159,6 +270,7 @@ function InstallVisualStudio {
     }
 }
 
+# Installs Visual Studio Code with override options.
 function InstallVisualStudioCode {
     try {    
         Log "Installing VS Code..."
@@ -173,12 +285,14 @@ function InstallVisualStudioCode {
     }
 }
 
+# Installs the Buildkite agent using the official install script with BUILDKITE_AGENT_TOKEN read from environment variable.
 function InstallBuildkiteAgent {
     Log "Installing buildkite-agent..."
     $env:buildkiteAgentToken = $env:BUILDKITE_AGENT_TOKEN
     Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/buildkite/agent/main/install.ps1'))
 }
 
+# Installs 7-Zip and adds its directory to the PATH.
 function Install7Zip {
     Log "Installing 7-Zip..."
     winget install -e --id 7zip.7zip -h
@@ -191,6 +305,7 @@ function Install7Zip {
     }
 }
 
+# Exits the script with a delay and optional exit code.
 function ExitWithDelay {
     param (
         [int]$DelayInSeconds = 5,
@@ -201,41 +316,10 @@ function ExitWithDelay {
     exit $ExitCode
 }
 
-function ParseArguments {
-    param (
-        [Parameter(Mandatory = $false, Position = 0)]
-        [string[]]$args
-    )
-
-    $global:installOptions = @{
-        "winget"    = $false
-        "deps"      = $false
-        "vs"        = $false
-        "buildkite" = $false
-        "7zip"      = $false
-        "all"       = $false
-    }
-
-    foreach ($arg in $args) {
-        switch ($arg) {
-            "-winget" { $global:installOptions["winget"] = $true }
-            "-deps" { $global:installOptions["deps"] = $true }
-            "-vs" { $global:installOptions["vs"] = $true }
-            "-buildkite" { $global:installOptions["buildkite"] = $true }
-            "-7zip" { $global:installOptions["7zip"] = $true }
-            "-all" { $global:installOptions["all"] = $true }
-            default { Write-Host "Unknown option: $arg" -ForegroundColor Red }
-        }
-    }
-
-    if (-not ($global:installOptions.Values -contains $true)) {
-        $global:installOptions["all"] = $true
-    }
-}
-
+# Main bootstrap function that calls the other functions based on the installOptions.
 function Bootstrap {
     Log "Running bootstrap"
-    if ($global:installOptions["winget"] -or $global:installOptions["all"]) {
+    if ($Winget -or $All) {
         $wingetVersion = CheckWinget
         if (-not $wingetVersion) {
             InstallWinget
@@ -245,16 +329,16 @@ function Bootstrap {
         Log "Winget not found. Please install winget and try again." -type "Error"
         ExitWithDelay 1
     }
-    if ($global:installOptions["deps"] -or $global:installOptions["all"]) {
+    if ($Deps -or $All) {
         InstallDeps
     }
-    if ($global:installOptions["buildkite"] -or $global:installOptions["all"]) {
+    if ($Buildkite -or $All) {
         InstallBuildkiteAgent
     }
-    if ($global:installOptions["7zip"] -or $global:installOptions["all"]) {
+    if ($SevenZip -or $All) {
         Install7Zip
     }
-    if ($global:installOptions["vs"] -or $global:installOptions["all"]) {
+    if ($Vs -or $All) {
         InstallVisualStudioCode
         InstallVisualStudio
     }
@@ -262,19 +346,31 @@ function Bootstrap {
 }
 
 # ============================================================================ #
-# Setup
-# ============================================================================ #
-if (-not (CheckAdmin)) {
-    Log "Please run this script as an administrator." -type "Error"
-    ExitWithDelay 1
-}
-
-# ============================================================================ #
 # Main Script
 # ============================================================================ #
 try {
+    if ($Help) {
+        Get-Help $MyInvocation.MyCommand.Path -Detailed
+        exit
+    }
+
+    if ($Version.IsPresent) {
+        Write-Output $CurrentVersion
+        exit
+    }
+
+    if (-not (CheckAdmin)) {
+        Log "Please run this script as an administrator." -type "Error"
+        ExitWithDelay 1
+    }
+
     LoadEnvVariables
-    ParseArguments $args
+
+    # Determine which components to install based on parameters or default to all if none specified.
+    if (-not ($Winget -or $Deps -or $Vs -or $Buildkite -or $SevenZip) -or $All) {
+        $Winget = $Deps = $Vs = $Buildkite = $SevenZip = $true
+    }
+
     Bootstrap
 }
 catch {

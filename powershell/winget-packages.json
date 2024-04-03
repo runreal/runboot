@@ -2,6 +2,7 @@
   "packages": [
     "Microsoft.Powershell",
     "Microsoft.VCRedist.2015+.x64",
+    "Microsoft.WindowsTerminal",
     "Git.Git",
     "Amazon.AWSCLI",
     "GitHub.cli",
@@ -9,6 +10,8 @@
     "OpenJS.NodeJS",
     "AgileBits.1Password.CLI",
     "Perforce.P4V",
-    "tailscale.tailscale"
+    "tailscale.tailscale",
+    "Docker.DockerDesktop",
+    "EpicGames.EpicGamesLauncher"
   ]
 }
